@@ -2,6 +2,9 @@ import fire
 import psycopg2
 import csv
 
+
+VACCINE_TYPE = {"COM": "Pfizer/BioNTech", "MOD": "Moderna", "CN": "SinoPharm", "SIN": "Coronavac – Sinovac", "SPU": "Sputnik V", "AZ": "AstraZeneca", "UNK": "Unknown" }
+
 def writeConfig(conn_string):
     with open(".conninfo","w") as source:
         source.write(conn_string)
@@ -86,6 +89,15 @@ def runSQL(statement):
 
 # I want this to be fed by a FastAPI
 # I want this to have a beautiful interface.
+
+def getTotalVaccineTypeCountsByCountry():
+    # For each country
+    # Summarize the total counts of each vaccine
+    # Map the type and country names to make it human readable
+    return
+
+## Use FastAPI to read TotalVaccinesByCountry and return data via API.
+# Make it pretty with fancy JS.
 
 def getAverageTemperatures():
     ret=dict()
