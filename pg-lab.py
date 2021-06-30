@@ -80,6 +80,13 @@ def runSQL(statement):
     conn.commit()
     return None
 
+# I want to find the proportion of vaccines for each of the top manufacturers by country.
+# I do  not care about age and the dose types (mixing doses?)
+# England - 80% Astra Zeneca, 9% Pfizer, 1% Sinovab, 0% Unknown
+
+# I want this to be fed by a FastAPI
+# I want this to have a beautiful interface.
+
 def getAverageTemperatures():
     ret=dict()
     conn=connect()
