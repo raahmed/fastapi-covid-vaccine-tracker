@@ -10,7 +10,7 @@ To store this dataset, we have tables containing geospatial information stored u
 ## Prerequisites
 - Azure Subscription (e.g. [Free](https://aka.ms/azure-free-account) or [Student](https://aka.ms/azure-student-account))
 - An Azure Database for PostgreSQL-Flexible Server(preview) (Create via [Portal](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-portal) or [Azure CLI](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-cli)) 
-- [Python](https://www.python.org/downloads/) 3.4+
+- [Python](https://www.python.org/downloads/) 3.8+
 - Latest [pip](https://pip.pypa.io/en/stable/installing/) package installer
 
 
