@@ -48,7 +48,7 @@ When the command finishes executing, copy the JSON output of the output - paying
 1. First, we need to figure out what data we want to put into our database. For this demo, I download data from the ECDC website and added my sample CSV to this repository. You can obtain this data by cloning this repository:
    ```
    git clone https://github.com/raahmed/fastapi-covid-vaccine-tracker.git
-   cd cd fastapi-covid-vaccine-tracker
+   cd fastapi-covid-vaccine-tracker
    ```
 
 2. Next, we will use the contents of the JSON you saved when provisioning the database above in the "Get database connection information" section.
