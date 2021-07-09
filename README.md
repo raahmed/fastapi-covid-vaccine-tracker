@@ -115,6 +115,18 @@ You can quickly build an endpoint that will:
 
 All of these functions are shown in [main.py](main.py)!
 
+However, in order to execute them and see their output locally, you need to run the server. To do so, execute the following:
+
+```uvicorn main:app --reload ```
+
+Then navigate to any of the following locally to see some interesting data trends:
+localhost:8000/
+localhost:8000/getpercentages
+localhost:8000/mostpopular
+localhost:8000/leastpopular
+
+
+
 ### Showing your code to the World:
 
 #### Deploy Website Code 
