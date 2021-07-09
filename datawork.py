@@ -1,9 +1,9 @@
 import fire
 import psycopg2
 import csv
+import os
 
 
-#TODO: A more pythonic way to keep a large dictionary in code.
 VACCINE_TYPE = {"COM": "Pfizer/BioNTech", "MOD": "Moderna", "CN": "SinoPharm", "SIN": "Coronavac – Sinovac", "JANSS": "J&J Janssen", "SPU": "Sputnik V", "AZ": "AstraZeneca", "UNK": "Unknown" }
 COUNTRY_CODES = {
     "BE": "Belgium", "BG": "Bulgaria", 
@@ -35,21 +35,29 @@ COUNTRY_CODES = {
     "NO": "Norway",
     "UK": "United Kingdom"
     }
+
 def writeConfig(conn_string):
     with open(".conninfo","w") as source:
         source.write(conn_string)
         return "Successfully wrote config file"
 
+def get_env(env_variable):
+    try:
+        return os.environ[env_variable]
+    except KeyError:
+        error_msg = f"Set the {env_variable} environment variable"
+        raise KeyError
+
+CONNECTION_STRING = get_env("CONNECTION_STRING")
+
 def connect():
-    with open(".conninfo","r") as source:
-        connString=source.readline().strip()
-        #return connString
-        try:
-            conn=psycopg2.connect(connString)
-            return conn
-        except:
-            print("Database connection error")
-            return None
+    connString=CONNECTION_STRING
+    try:
+        conn=psycopg2.connect(connString)
+        return conn
+    except:
+        print("Database connection error - is your connectionString set properly in Configuration Settings?")
+        return None
 
 '''
 The headers for the CSV are as follows. 
@@ -57,7 +65,7 @@ More information is present here: https://www.ecdc.europa.eu/sites/default/files
 YearWeekISO,FirstDose,FirstDoseRefused, SecondDose,UnknownDose,NumberDosesReceived,Region,Population,ReportingCountry,TargetGroup,Vaccine,Denominator
 '''
 
-def loadData(filename="data.csv"):
+def loadData(filename="covid_data.csv"):
     conn=connect()
     cursor=conn.cursor()
     cursor.execute('CREATE EXTENSION IF NOT EXISTS postgis')
@@ -92,24 +100,6 @@ def getAllData():
         ret[device].append(data)
     return ret
 
-def runSQL(statement):
-    conn=connect()
-    cursor=conn.cursor()
-    cursor.execute(statement)
-    conn.commit()
-    return None
-
-# I want to find the proportion of vaccines for each of the top manufacturers by country.
-# I do  not care about age and the dose types (mixing doses?)
-# England - 80% Astra Zeneca, 9% Pfizer, 1% Sinovab, 0% Unknown
-
-# I want this to be fed by a FastAPI
-# I want this to have a beautiful interface.
-
-## Use FastAPI to read TotalVaccinesByCountry and return data via API.
-# Make it pretty with fancy JS.
-#def countryVaccineDistribution():
-
 def getCountryVaccinePercentages():
     vaccine_dose_counts = getCountryVaccineCounts()
     for country in vaccine_dose_counts.keys():
@@ -120,10 +110,10 @@ def getCountryVaccinePercentages():
                 pass
             else:
                 percentage = vaccine_dose_counts[country][vaccine_type] * 100/(1.0 * total_doses)
+                percentage = round(percentage,2)
                 vaccine_dose_counts[country][vaccine_type] = percentage
                 total_percentage += percentage
-        # if total_percentage > 100 or total_percentage < 98:
-        #     print(country, total_percentage)
+        del vaccine_dose_counts[country]["total_doses"]
     return vaccine_dose_counts
 
 def getCountryVaccineCounts():
@@ -157,5 +147,5 @@ def getCountryVaccineCounts():
     return summary_information
 
 if __name__ == '__main__':
-    fire.Fire({"writeConfig":writeConfig,"loadData":loadData,"populateVaccineData": populateVaccineData, "getCountryVaccineCounts":getCountryVaccineCounts, "getCountryVaccinePercentages": getCountryVaccinePercentages, "runSQL":runSQL})
+    fire.Fire({"writeConfig":writeConfig,"loadData":loadData,"getAllData": getAllData, "populateVaccineData": populateVaccineData, "getCountryVaccineCounts":getCountryVaccineCounts, "getCountryVaccinePercentages": getCountryVaccinePercentages})
 
