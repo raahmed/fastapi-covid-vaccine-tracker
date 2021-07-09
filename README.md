@@ -71,7 +71,7 @@ Then execute the line below - no need to substitute the values in the line below
 3. Once that is done, execute the following line:
 
 ```
-echo $CONNECTION_STRING
+   echo $CONNECTION_STRING
 ```
 
 You should see an output string with the correctly formatted information.
@@ -80,26 +80,28 @@ Copy this output string and set it aside.
 
 4. Next, let's create a table and load some data from a local CSV file, [covid_data.csv](covid_data.csv). The [loadData](dataworks.py#L27) function of the dataworks.py program will automatically connect to the database (using our connectionString), create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
 
-    ```
-    python3 dataworks.py loadData covid_data.csv
-    ```
+```
+   python3 dataworks.py loadData covid_data.csv
+```
 5. However, if you open the [covid_data.csv](covid_data.csv), it contains a lot of information. Specifically, the columns inclde a lot of information we will probably not need for exploring vaccine popularity. So, we can populate a new table called vaccine_data. The [populateVaccineData](dataworks.pyL#83) function inserts only the necessary information for our analysis into this smaller and more efficient data set.
 
 6. Let's do something more interesting with this new dataset. The function [getCountryVaccineCounts](dataworks.py#119) obtains the total count of each vaccine type that is administered.
 
 We can execute 
-    ```
-    python3 dataworks.py getCountryVaccineCounts
-    ```
+```
+   python3 dataworks.py getCountryVaccineCounts
+```
 
 and we will see some numerical analysis.
 
 7. Now, absolute numbers are not very human-friendly. Percentages are far better. 
 
 Thankfully, there is a program that will give us the total percentage share of the market for each vaccine type. You can invoke it:
-    ```
-    python3 dataworks.py getCountryVaccinePercentages
-    ```
+   
+   
+```
+   python3 dataworks.py getCountryVaccinePercentages
+```
 
 ## Connecting Our Analysis to the Web
 ### Setting up Local FastAPI Server:
@@ -117,9 +119,12 @@ All of these functions are shown in [main.py](main.py)!
 
 However, in order to execute them and see their output locally, you need to run the server. To do so, execute the following:
 
-```uvicorn main:app --reload ```
+```
+   uvicorn main:app --reload
+```
 
 Then navigate to any of the following locally to see some interesting data trends:
+
 localhost:8000/
 localhost:8000/getpercentages
 localhost:8000/mostpopular
@@ -132,11 +137,13 @@ localhost:8000/leastpopular
 #### Deploy Website Code 
 You might be interested in sharing your vaccine analysis with the world! To do this, you need to deploy your FastAPI and dataworks code to the internet. To do this, execute the following in your Terminal:
 
-``` az webapp up --name myvaccineanalysis0731 ```
+```
+   az webapp up --name europecovidvaccine
+```
 
 Please note - the value of the name flag needs to be unique across all of Azure! ProTip: try to add some random numbers to your preferred name.
 
-Wait until the deployment the is complete. Your command should tell you to visit your website, which will be based on your application name (for example:  myvaccineanalysis0731.azurewebsites.net)
+Wait until the deployment the is complete. Your command should tell you to visit your website, which will be based on your application name (for example:  europecovidvaccine.azurewebsites.net)
 
 ### Set up database connection on Azure
 
@@ -181,7 +188,9 @@ Finally, navigate to "General Settings" inside of the Configuration view:
 
 In the "Startup Command" section, copy and paste the following command:
 
-```gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app```
+```
+   gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app
+```
 
 Then click "Save" and then click "OK" when you are warned about application restart.
 
@@ -193,35 +202,21 @@ Your web applicaiton will now start up with the right command!
 
 You can now go to your Azure website and see the API endpoints!
 
-
-
-9. Now that we've got our database ready to go, let's start using our application. For this part of the lab, we're going to figure out what the average device was at the nearest sensor to a location of our choice. We'll start by picking any city that you like, anywhere in the world, and doing a Bing search for the city and the word "coordinates". For example, if you'd want to see temperature data for Lima, Peru, you'd get to [this result page](https://www.bing.com/search?q=Lima%2C+Peru+coordinates), where we get a latitude and longitude of -12.046374° N, -77.042793° E. Now that we've got some coordinates to test with, we'll find the nearest device so we can get suitable information. The [getNearestDevice](pg-lab.py#L55) function will query our new `device_list` table using the `ST_Distance` PostGIS function to figure out what the closest device is. 
-
--
-    ```
-    python3 pg-lab.py getNearestDevice -12.046374 -77.042793
-    ```
-
-1. Now that we've found the device, we can get the average temperature of that device from our raw_data table using the [getDeviceAverage](pg-lab.py#L63) function. Unlike the inefficient query from step 3, we're having Postgres generate the average for us. This is a huge improvement in performance, as we need to move much less data over the network and Postgres is very well optimized to run analtyical queries.  
-
-    ```
-    python3 pg-lab.py getDeviceAverage 5
-    ```
-
-
-**Bonus objective:** [getAverageTemperatures](pg-lab.py#L77) pulls a lot of data it doesn't need to. Rewrite it to do the average calculation in pure SQL instead!
-
-
 ## (Optional) Delete/Stop your Azure Resources
 
 If you have created an Azure resources for the purposes of this lab and you *do not* want to keep and continue to be billed for it, you can delete via the terminal:
 
-az group delete --name eurocovidvaccine --no-wait
-
+```
+   az group delete --name eurocovidvaccine --no-wait
+```
 
 ## Want to Learn More about PostgreSQL Flexible Server on Azure
 
 If you want to dig deeper and undestand what all PostgreSQL Flexible Server on Azure has to offer , the Flexible Server [documents](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/) are a great place to start.
+
+## Want to Learn More about WebApps on Azure
+
+If you want to dig deeper and undestand what all PostgreSQL Flexible Server on Azure has to offer , the Flexible Server [documents](https://docs.microsoft.com/en-us/azure/app-service/) are a great place to start.
 
 ## Reference:
 - Code inspired by:
