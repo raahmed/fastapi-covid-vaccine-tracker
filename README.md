@@ -1,36 +1,42 @@
-# Explore Azure Database for PostgreSQL-Flexible Server(Preview) with Python
+# Exploring Covid Vaccine Datasets with Python using FastAPI, Azure Database for PostgreSQL-Flexible Server(Preview) and Azure Web Apps
 
-In this lab, we will explore one of the latest deployment offering of **Azure Database for PostgreSQL**-**Flexible Server** which is currently in public preview. Flexible server is architected to meet the requirements of modern applications. With Flexible server you get improved network latency, simplified provisioning experience, inbuilt connection pooler, burstable compute, and above all the ability to start/stop the service when needed to reduce the cost. 
-
-In this module you will learn how to import data into an Azure Database for PostgreSQL-Flexible Server instance using a python script and the `psycopg2` module. Once the data is loaded, you will be exploring a dataset meant to simulate an "IoT", or Internet of Things use case. This dataset contains simulated weather data from weather sensors in cities across the world.
-
-To store this dataset, we have tables containing geospatial information stored using Postgres's [PostGIS data type](https://postgis.net/) as well as JSON content stored in Postgres's [jsonb datatype](https://www.postgresql.org/docs/9.4/datatype-json.html). We are accessing the data using functions built into a python script provided as part of this lab. The script relies on `psycopg2` to connect to Postgres and load or fetch data.  
-
+In this code, I will explore how FastAPI, Fire and Azure can be combined to gather meaningful insights from COVID vaccination data. We will use Fire to load publicly available data into Azure **Azure Database for PostgreSQL**-**Flexible Server** which is currently in public preview. We will then use FastAPI to query data, perform meaningful transformation on them and build APIs to share these insights with the world. These APIs will be hosted on Azure WebApps.
 
 ## Prerequisites
 - Azure Subscription (e.g. [Free](https://aka.ms/azure-free-account) or [Student](https://aka.ms/azure-student-account))
-- An Azure Database for PostgreSQL-Flexible Server(preview) (Create via [Portal](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-portal) or [Azure CLI](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-cli)) 
-- [Python](https://www.python.org/downloads/) 3.8+
 - Latest [pip](https://pip.pypa.io/en/stable/installing/) package installer
+- Python 3.6+
 
+## Install the Python libraries
 
-## Install the Python libraries for PostgreSQL
-The [psycopg2](https://pypi.python.org/pypi/psycopg2/) module enables connecting to and querying a PostgreSQL database, and is available as a Linux, macOS, or Windows [wheel](https://pythonwheels.com/) package. Install the binary version of the module, including all the dependencies. For more information about `psycopg2` installation and requirements, see [Installation](http://initd.org/psycopg/docs/install.html). 
-
-To install `psycopg2`, open a terminal or command prompt and run the command `pip install psycopg2`.
-
-We will also install `fire`, required by our CLI tool, `pg-lab.py`, by running the command `pip install fire`.
-
+To install all the necessary libraries for this program, open a terminal or command prompt and run the command `pip install -r requirements.txt`.
 
 ## Get database connection information
 
-Connecting to an Azure Database for PostgreSQL database requires the fully qualified server name and login credentials. You can get this information from the Azure portal.
+First, we are going to set up our CLI to connect to Azure in a manner that is secure and one which will allow us to quickly delete resources to avoid incurring additional cost.
 
-1. In the [Azure portal](https://portal.azure.com/), search for and select your Azure Database for PostgreSQL-Flexible Server(preview) server name. 
-1. On the server's **Overview** page, copy the fully qualified **Server name** and the **Admin username**. The fully qualified **Server name** is always of the form *\<my-server-name>.postgres.database.azure.com*.
-1. You will also need your **Admin password** which you chose when you created the server, otherwise you can reset it using the `Reset password` button on `Overview` page.
+First, log into Azure through the following command. It should open up a browser where you can add your credentials.
 
-Note: Make sure you have created a [server-level firewall rule](https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-server-database-portal#configure-a-server-level-firewall-rule) to allow traffic from the IP address of the machine you will be using to connect to the database. If you are connected to a remote machine via SSH, you can find your current IP address via the terminal using `dig +short myip.opendns.com @resolver1.opendns.com`.
+```
+az login
+```
+
+Next, we will set up Azure to create resources in an organized manner. To do this, we will create a resource group. A resource group can be imagined as a container with all our work. At the end of this README, we can delete this one container and get rid of any cost-incurring resources easily. Finally, we will turn on parameter persistence - this will ensure that we do not have to set default parameters repeatedly.
+
+```
+az group create --location westus --name eurocovidvaccine
+az config param-persist on
+```
+
+After you have finished setting up Azure, it is time to set up your Azure Database for Flexible Server. To do this, enter the following command. Note that the firewall settings are set to public access for simplicity of demonstration - you can limit these in the future by seeing the documentation. Give the command some time to execute.
+
+``` 
+az postgres flexible-server create --public-access all
+```
+
+When the command finishes executing, copy the JSON output of the output - paying particular attenion to the dbname, hostname, username and password:
+![image](https://user-images.githubusercontent.com/25991359/125120292-1d42a800-e0a7-11eb-8199-b14d625a3a1b.png)
+
 
 ## Data Reference:
 
@@ -39,47 +45,145 @@ Note: Make sure you have created a [server-level firewall rule](https://docs.mic
 
 ## How to run the Python examples
 
-1. First, we need to get the script [pg-lab.py](pg-lab.py), as well as [data.csv](data.csv) onto our local machine. You may download them manually, or `git clone` this repository and `cd` into the correct `4-postgres/` directory as follows:
-
+1. First, we need to figure out what data we want to put into our database. For this demo, I download data from the ECDC website and added my sample CSV to this repository. You can obtain this data by cloning this repository:
    ```
-   git clone https://github.com/Azure-Samples/azure-python-labs.git
-   cd azure-python-labs/4-postgres/
+   git clone https://github.com/raahmed/fastapi-covid-vaccine-tracker.git
+   cd cd fastapi-covid-vaccine-tracker
    ```
 
-1. Then, we need to set up the Postgres connection we're going to be using for the rest of this lab. The following script writes the connection string to a .config file in the current directory via the [writeConfig](pg-lab.py#L5) function. To run this, set some environment variables which we use to create the connection string from the values :
+2. Next, we will use the contents of the JSON you saved when provisioning the database above in the "Get database connection information" section.
+
+![image](https://user-images.githubusercontent.com/25991359/125120292-1d42a800-e0a7-11eb-8199-b14d625a3a1b.png)
+Insert the information from the JSON into the following string:
+   
+  ```
+   export SERVER_NAME='server176472475.postgres.database.azure.com'
+   export ADMIN_USERNAME='myusername'
+   export ADMIN_PASSWORD='mypassword'
+   export DB_NAME="flexibleserverdb"
+ ```
+   
+Then execute the line below - no need to substitute the values in the line below - it will be done automatically:
+```
+   export CONNECTION_STRING "host=${SERVER_NAME} port=5432 dbname=postgres user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
+```
+
+3. Once that is done, execute the following line:
+
+```
+echo $CONNECTION_STRING
+```
+
+You should see an output string with the correctly formatted information.
+
+Copy this output string and set it aside.
+
+4. Next, let's create a table and load some data from a local CSV file, [covid_data.csv](covid_data.csv). The [loadData](dataworks.py#L27) function of the dataworks.py program will automatically connect to the database (using our connectionString), create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
 
     ```
-    export SERVER_NAME='pg200700.postgres.database.azure.com'
-    export ADMIN_USERNAME='myadmin'
-    export ADMIN_PASSWORD='...'
-    python3 pg-lab.py writeConfig "host=${SERVER_NAME} port=5432 dbname=postgres user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
+    python3 dataworks.py loadData covid_data.csv
+    ```
+5. However, if you open the [covid_data.csv](covid_data.csv), it contains a lot of information. Specifically, the columns inclde a lot of information we will probably not need for exploring vaccine popularity. So, we can populate a new table called vaccine_data. The [populateVaccineData](dataworks.pyL#83) function inserts only the necessary information for our analysis into this smaller and more efficient data set.
+
+6. Let's do something more interesting with this new dataset. The function [getCountryVaccineCounts](dataworks.py#119) obtains the total count of each vaccine type that is administered.
+
+We can execute 
+    ```
+    python3 dataworks.py getCountryVaccineCounts
     ```
 
-1. Next, let's create a table and load some data from a local CSV file, [data.csv](data.csv). The [loadData](pg-lab.py#L27) function of the lab script will automatically connect to the database, create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
+and we will see some numerical analysis.
 
-    ```
-    python3 pg-lab.py loadData data.csv
-    ```
+7. Now, absolute numbers are not very human-friendly. Percentages are far better. 
 
-1. Now that the data is loaded, let's look at a sample of the data to see what we're working with. [pg-lab.py](pg-lab.py) has a few functions built in to process data and give us some results, so to keep things simple let's start with [getAverageTemperatures](pg-lab.py#L77). This function automatically pulls data, loads it into a dict for processing, and gives us average temperartures per location. This is a very inefficient function, so you'll probably notice that it is slow. 
-
+Thankfully, there is a program that will give us the total percentage share of the market for each vaccine type. You can invoke it:
     ```
-    python3 pg-lab.py getAverageTemperatures
+    python3 dataworks.py getCountryVaccinePercentages
     ```
 
-1. We're going to be using geospatial data for the next part of this lab, so to prepare for that let's add a geospatial index to speed things up in advance. PostGIS can use [GIST indexes](https://postgis.net/workshops/postgis-intro/indexing.html) to make spatial lookups much faster, so if we create an index and specify the [GIST type](https://www.postgresql.org/docs/current/textsearch-indexes.html), we'll get great results. To make this easier, [pg-lab.py](pg-lab.py) has a built-in [runSQL](pg-lab.py#L70) function to run arbitrary SQL for this lab.
+## Connecting Our Analysis to the Web
+### Setting up Local FastAPI Server:
 
-    ```
-    python3 pg-lab.py runSQL "CREATE INDEX idx_raw_data_1 ON raw_data USING GIST (location);"
-    ```
+1. At this point, you might be interested in sharing your insights and data learnings with others. This is where FastAPI can help us quickly build an API to share our analysis with others.
 
-1. There's one more thing we need to do before we can run all of the queries we want to. Right now, we've only got data in our `raw_data` table, and it has a record for every device and every minute. This means that, if we just want to look up basic information such as what city a device is in, we've got to query a big table, which can be slow. To fix this, [pg-lab.py](pg-lab.py) has a [populateDevices](pg-lab.py#L20) function that will perform an `INSERT INTO SELECT` to automatically populate the `device_list` table with summary information on our devices. Creating aggregate or summary tables like this is an excellent way to speed up application performance!
+You can quickly build an endpoint that will:
 
-    ```
-    python3 pg-lab.py populateDevices
-    ```
+1) Return all the vaccine counts
+2) Return all the vaccine percentages
+3) Return the most popular vaccine per country
+4) Return the least popular vaccine by country
 
-1. Now that we've got our database ready to go, let's start using our application. For this part of the lab, we're going to figure out what the average device was at the nearest sensor to a location of our choice. We'll start by picking any city that you like, anywhere in the world, and doing a Bing search for the city and the word "coordinates". For example, if you'd want to see temperature data for Lima, Peru, you'd get to [this result page](https://www.bing.com/search?q=Lima%2C+Peru+coordinates), where we get a latitude and longitude of -12.046374° N, -77.042793° E. Now that we've got some coordinates to test with, we'll find the nearest device so we can get suitable information. The [getNearestDevice](pg-lab.py#L55) function will query our new `device_list` table using the `ST_Distance` PostGIS function to figure out what the closest device is. 
+All of these functions are shown in [main.py](main.py)!
+
+### Showing your code to the World:
+
+#### Deploy Website Code 
+You might be interested in sharing your vaccine analysis with the world! To do this, you need to deploy your FastAPI and dataworks code to the internet. To do this, execute the following in your Terminal:
+
+``` az webapp up --name myvaccineanalysis0731 ```
+
+Please note - the value of the name flag needs to be unique across all of Azure! ProTip: try to add some random numbers to your preferred name.
+
+Wait until the deployment the is complete. Your command should tell you to visit your website, which will be based on your application name (for example:  myvaccineanalysis0731.azurewebsites.net)
+
+### Set up database connection on Azure
+
+Navigate to portal.azure.com and log in.
+In the search bar, write "App Services" and click the icon below:
+
+![image](https://user-images.githubusercontent.com/25991359/125123280-4ebd7280-e0ab-11eb-9f73-64902555fac9.png)
+
+Next, pick your website name from the list (or search for it):
+
+![image](https://user-images.githubusercontent.com/25991359/125123401-76acd600-e0ab-11eb-852a-eda07e34ff59.png)
+
+Next, click "Settings" under "Configuration". ProTip: Use "Command + F" to search for "Configuration" if you are having trouble navigating the UI.
+
+![image](https://user-images.githubusercontent.com/25991359/125123580-b07ddc80-e0ab-11eb-92e5-6b6f0a8563c5.png)
+
+Next, click "Add new Setting"
+
+![image](https://user-images.githubusercontent.com/25991359/125123663-cab7ba80-e0ab-11eb-98e6-d507e9f02741.png)
+
+Next, used the copied output of your previous ``` echo $CONNECTION_STRING ``` command from the previous step and paste it:
+
+![image](https://user-images.githubusercontent.com/25991359/125123910-2aae6100-e0ac-11eb-8638-27dbc8f3b2a3.png)
+
+Next, click "OK"
+
+![image](https://user-images.githubusercontent.com/25991359/125123999-49145c80-e0ac-11eb-87be-81c8a16a53eb.png)
+
+Next, click "SAVE" - this is in addition to the OK!
+
+Double-check that the save worked by refreshing the page. It should look as follows (with the CONNECTION_STRING present and the "SAVE" icon disabled)
+
+![image](https://user-images.githubusercontent.com/25991359/125124147-7eb94580-e0ac-11eb-8da0-f29bc7df0a4e.png)
+
+
+### Set up Server connection on Azure
+
+Finally, navigate to "General Settings" inside of the Configuration view:
+
+![image](https://user-images.githubusercontent.com/25991359/125124252-a6a8a900-e0ac-11eb-8b18-1605ba2f296b.png)
+
+
+In the "Startup Command" section, copy and paste the following command:
+
+```gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app```
+
+Then click "Save" and then click "OK" when you are warned about application restart.
+
+![image](https://user-images.githubusercontent.com/25991359/125124391-d8ba0b00-e0ac-11eb-9e72-a433d2944d88.png)
+
+Your web applicaiton will now start up with the right command!
+
+## Show your website to the world!
+
+You can now go to your Azure website and see the API endpoints!
+
+
+
+9. Now that we've got our database ready to go, let's start using our application. For this part of the lab, we're going to figure out what the average device was at the nearest sensor to a location of our choice. We'll start by picking any city that you like, anywhere in the world, and doing a Bing search for the city and the word "coordinates". For example, if you'd want to see temperature data for Lima, Peru, you'd get to [this result page](https://www.bing.com/search?q=Lima%2C+Peru+coordinates), where we get a latitude and longitude of -12.046374° N, -77.042793° E. Now that we've got some coordinates to test with, we'll find the nearest device so we can get suitable information. The [getNearestDevice](pg-lab.py#L55) function will query our new `device_list` table using the `ST_Distance` PostGIS function to figure out what the closest device is. 
 
 -
     ```
@@ -96,24 +200,16 @@ Note: Make sure you have created a [server-level firewall rule](https://docs.mic
 **Bonus objective:** [getAverageTemperatures](pg-lab.py#L77) pulls a lot of data it doesn't need to. Rewrite it to do the average calculation in pure SQL instead!
 
 
-## (Optional) Delete/Stop your Azure Database for PostgreSQL-Flexible Server
+## (Optional) Delete/Stop your Azure Resources
 
-If you have created an Azure Database for PostgreSQL-Flexible Server(preview) for the purposes of this lab and you *do not* want to keep and continue to be billed for it, you can delete it via the [Azure Portal](https://portal.azure.com) (see: [delete resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resources-portal#delete-resources)). Or if you want to return to it in future you can also stop the server temporarily by using [**Stop**](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/how-to-stop-start-server-portal) button available on the **Overview** page. Please note that while the machine is in **Stopped** state, you will not be charged for the compute resources. However you will still be charged for the storage.
+If you have created an Azure resources for the purposes of this lab and you *do not* want to keep and continue to be billed for it, you can delete via the terminal:
 
-![image](https://user-images.githubusercontent.com/41684987/117609229-38636b00-b17d-11eb-8dbb-c1a02a26ed9b.png)
-
-To restart the server again, just go to Azure portal and click on the [**Start**](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/how-to-restart-server-portal) button available on **Overview** page.
+az group delete --name eurocovidvaccine --no-wait
 
 
 ## Want to Learn More about PostgreSQL Flexible Server on Azure
 
 If you want to dig deeper and undestand what all PostgreSQL Flexible Server on Azure has to offer , the Flexible Server [documents](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/) are a great place to start.
-
-
-## TODO:
-- Add PG instructions
-- Add local context information.
-- Add link to the data.
 
 ## Reference:
 - Code inspired by:
