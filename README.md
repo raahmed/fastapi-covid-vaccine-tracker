@@ -1,4 +1,4 @@
-# Exploring Covid Vaccine Datasets with Python using FastAPI, Azure Database for PostgreSQL-Flexible Server(Preview) and Azure Web Apps
+# Exploring Covid Vaccine Type Popularity with Python using FastAPI, Fire, Azure Database for PostgreSQL-Flexible Server(Preview) and Azure Web Apps
 
 In this code, I will explore how FastAPI, Fire and Azure can be combined to gather meaningful insights from COVID vaccination data. We will use Fire to load publicly available data into Azure **Azure Database for PostgreSQL**-**Flexible Server** which is currently in public preview. We will then use FastAPI to query data, perform meaningful transformation on them and build APIs to share these insights with the world. These APIs will be hosted on Azure WebApps.
 
@@ -202,6 +202,13 @@ Your web applicaiton will now start up with the right command!
 
 You can now go to your Azure website and see the API endpoints!
 
+## Troubleshooting:
+
+If you are are having trouble with your website, please navigate to the log stream in the Azure Portal for important debugging information:
+
+![image](https://user-images.githubusercontent.com/25991359/125125415-69ddb180-e0ae-11eb-9a9b-3171179b6f4f.png)
+
+
 ## (Optional) Delete/Stop your Azure Resources
 
 If you have created an Azure resources for the purposes of this lab and you *do not* want to keep and continue to be billed for it, you can delete via the terminal:
@@ -209,6 +216,7 @@ If you have created an Azure resources for the purposes of this lab and you *do 
 ```
    az group delete --name eurocovidvaccine --no-wait
 ```
+
 
 ## Want to Learn More about PostgreSQL Flexible Server on Azure
 
