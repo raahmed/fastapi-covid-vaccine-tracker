@@ -202,6 +202,10 @@ Your web applicaiton will now start up with the right command!
 
 You can now go to your Azure website and see the API endpoints!
 
+https://europecovidvaccine.azurewebsites.net/
+https://europecovidvaccine.azurewebsites.net/getpercentages
+https://europecovidvaccine.azurewebsites.net/mostpopular
+https://europecovidvaccine.azurewebsites.net/leastpopular
 ## Troubleshooting:
 
 If you are are having trouble with your website, please navigate to the log stream in the Azure Portal for important debugging information:
