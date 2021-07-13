@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from datawork import getCountryVaccinePercentages
-from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 
-import json
 
 app = FastAPI()
 
