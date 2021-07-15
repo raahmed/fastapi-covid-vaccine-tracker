@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from datawork import getCountryVaccinePercentages
+from datawork import getCountryVaccineCounts, getCountryVaccinePercentages
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 
@@ -7,7 +7,12 @@ import json
 
 app = FastAPI()
 
-@app.get("/data")
+@app.get("/")
+async def root():
+    data = getCountryVaccineCounts()
+    return data
+
+@app.get("/getpercentages")
 async def root():
     data = getCountryVaccinePercentages()
     return data
