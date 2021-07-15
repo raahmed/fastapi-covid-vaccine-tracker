@@ -1,52 +1,42 @@
+from typing import Dict
+from models import CountryVaccineSummary
 from fastapi import FastAPI
-from datawork import getCountryVaccineCounts, getCountryVaccinePercentages
-from fastapi.responses import HTMLResponse
-from fastapi.responses import JSONResponse
+from datawork import getCountryVaccinePercentages
 
-import json
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    data = getCountryVaccineCounts()
-    return data
-
-@app.get("/getpercentages")
+@app.get("/data", response_model=CountryVaccineSummary)
 async def root():
     data = getCountryVaccinePercentages()
     return data
 
 @app.get("/mostpopular")
-async def root():
+async def most_popular() -> Dict[str, str]:
     data = getCountryVaccinePercentages()
-    countries = data.keys()
-    top_vaccine_by_country = dict()
-    for country in countries:
+    top_vaccine_by_country: Dict[str, str] = dict()
+    for country in data.country_names():
         top_vaccine = ""
         top_vaccine_percentage = 0
-        vaccine_names = data[country].keys()
-        for vaccine in vaccine_names:
-            vaccine_percentage = float(data[country][vaccine])
+        for vaccine in data.country_data[country].vaccine_types():
+            vaccine_percentage = float(data.country_data[country].vaccine_stats[vaccine])
             if vaccine_percentage > top_vaccine_percentage:
                 top_vaccine_percentage = vaccine_percentage
                 top_vaccine = vaccine
         top_vaccine_by_country[country] = top_vaccine
-    return JSONResponse(top_vaccine_by_country)   
+    return top_vaccine_by_country   
 
 @app.get("/leastpopular")
-async def root():
+async def least_popular() -> Dict[str, str]:
     data = getCountryVaccinePercentages()
-    countries = data.keys()
-    top_vaccine_by_country = dict()
-    for country in countries:
+    top_vaccine_by_country: Dict[str, str] = dict()
+    for country in data.country_names():
         bottom_vaccine = ""
         bottom_vaccine_percentage = 100
-        vaccine_names = data[country].keys()
-        for vaccine in vaccine_names:
-            vaccine_percentage = float(data[country][vaccine])
+        for vaccine in data.country_data[country].vaccine_types():
+            vaccine_percentage = float(data.country_data[country].vaccine_stats[vaccine])
             if vaccine_percentage < bottom_vaccine_percentage:
                 bottom_vaccine_percentage = vaccine_percentage
                 bottom_vaccine = vaccine
         top_vaccine_by_country[country] = bottom_vaccine
-    return JSONResponse(top_vaccine_by_country)   
+    return top_vaccine_by_country

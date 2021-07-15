@@ -1,7 +1,7 @@
-import fire
 import psycopg2
-import csv
 import os
+
+from models import CountryVaccineSummary, CountryVaccineData
 
 
 VACCINE_TYPE = {"COM": "Pfizer/BioNTech", "MOD": "Moderna", "CN": "SinoPharm", "SIN": "Coronavac – Sinovac", "JANSS": "J&J Janssen", "SPU": "Sputnik V", "AZ": "AstraZeneca", "UNK": "Unknown" }
@@ -41,17 +41,9 @@ def writeConfig(conn_string):
         source.write(conn_string)
         return "Successfully wrote config file"
 
-def get_env(env_variable):
-    try:
-        return os.environ[env_variable]
-    except KeyError:
-        error_msg = f"Set the {env_variable} environment variable"
-        raise KeyError
-
-CONNECTION_STRING = get_env("CONNECTION_STRING")
 
 def connect():
-    connString=CONNECTION_STRING
+    connString=os.getenv("CONNECTION_STRING")
     try:
         conn=psycopg2.connect(connString)
         return conn
@@ -80,12 +72,14 @@ def loadData(filename="covid_data.csv"):
         conn.commit()
         return "Data loaded successfully"
 
+
 def populateVaccineData():
     conn=connect()
     cursor=conn.cursor()
-    cursor.execute('INSERT INTO vaccine_data SELECT NumberDosesReceived,ReportingCountry,Vaccine FROM raw_data')
+    cursor.execute('INSERT INTO vaccine_data SELECT MAX(NumberDosesReceived),ReportingCountry,Vaccine FROM raw_data GROUP BY reportingcountry, vaccine')
     conn.commit()
     return None
+
 
 def getAllData():
     ret=dict()
@@ -100,24 +94,22 @@ def getAllData():
         ret[device].append(data)
     return ret
 
-def getCountryVaccinePercentages():
-    vaccine_dose_counts = getCountryVaccineCounts()
-    for country in vaccine_dose_counts.keys():
-        total_doses = vaccine_dose_counts[country]["total_doses"]
-        total_percentage = 0
-        for vaccine_type in vaccine_dose_counts[country].keys():
-            if vaccine_type == "total_doses" or total_doses == 0:
-                pass
-            else:
-                percentage = vaccine_dose_counts[country][vaccine_type] * 100/(1.0 * total_doses)
-                percentage = round(percentage,2)
-                vaccine_dose_counts[country][vaccine_type] = percentage
-                total_percentage += percentage
-        del vaccine_dose_counts[country]["total_doses"]
+
+def getCountryVaccinePercentages() -> CountryVaccineSummary:
+    vaccine_dose_counts: CountryVaccineSummary = getCountryVaccineCounts()
+    for country in vaccine_dose_counts.country_names():
+        total_doses = vaccine_dose_counts.country_data[country].total_doses
+        if total_doses == 0:
+            continue
+        for vaccine_type in vaccine_dose_counts.country_data[country].vaccine_types():
+            percentage = (vaccine_dose_counts.country_data[country].vaccine_stats[vaccine_type] / total_doses) * 100
+            percentage = round(percentage,2)
+            vaccine_dose_counts.country_data[country].vaccine_stats[vaccine_type] = percentage
     return vaccine_dose_counts
 
-def getCountryVaccineCounts():
-    summary_information = dict()
+
+def getCountryVaccineCounts() -> CountryVaccineSummary:
+    summary_information: CountryVaccineSummary = CountryVaccineSummary()
     conn=connect()
     cursor=conn.cursor()
     cursor.execute('SELECT distinct NumberDosesReceived, ReportingCountry, Vaccine FROM vaccine_data')
@@ -130,22 +122,23 @@ def getCountryVaccineCounts():
             vaccine_type = VACCINE_TYPE[vaccine_type]
         if doses == None:
             doses = 0
-        if country not in summary_information:
-            summary_information[country] = {vaccine_type: doses, "total_doses": doses}
-        else:
-            if vaccine_type not in summary_information[country]:
-                summary_information[country][vaccine_type] = doses
-                summary_information[country]["total_doses"] += doses
-            else:
-                try:
-                    summary_information[country][vaccine_type] += int(doses)
-                    summary_information[country]["total_doses"] += doses
+        if country not in summary_information.country_data:
+            summary_information.country_data[country] = CountryVaccineData(total_doses=doses)
 
-                except:
-                    print("An error occurred")
-                    print(doses, country, vaccine_type)
+        if vaccine_type not in summary_information.country_names():
+            summary_information.country_data[country].vaccine_stats[vaccine_type] = doses
+            summary_information.country_data[country].total_doses += doses
+        else:
+            try:
+                summary_information.country_data[country].vaccine_stats[vaccine_type] += int(doses)
+                summary_information.country_data[country].total_doses += doses
+
+            except:
+                print("An error occurred")
+                print(doses, country, vaccine_type)
     return summary_information
 
-if __name__ == '__main__':
-    fire.Fire({"writeConfig":writeConfig,"loadData":loadData,"getAllData": getAllData, "populateVaccineData": populateVaccineData, "getCountryVaccineCounts":getCountryVaccineCounts, "getCountryVaccinePercentages": getCountryVaccinePercentages})
 
+if __name__ == '__main__':
+    import fire
+    fire.Fire({"writeConfig":writeConfig,"loadData":loadData,"getAllData": getAllData, "populateVaccineData": populateVaccineData, "getCountryVaccineCounts":getCountryVaccineCounts, "getCountryVaccinePercentages": getCountryVaccinePercentages})
