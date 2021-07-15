@@ -78,10 +78,10 @@ You should see an output string with the correctly formatted information.
 
 Copy this output string and set it aside.
 
-4. Next, let's create a table and load some data from a local CSV file, [covid_data.csv](covid_data.csv). The [loadData](datawork.py#L27) function of the dataworks.py program will automatically connect to the database (using our connectionString), create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
+4. Next, let's create a table and load some data from a local CSV file, [covid_data.csv](covid_data.csv). The [loadData](datawork.py#L27) function of the datawork.py program will automatically connect to the database (using our connectionString), create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
 
 ```
-   python3 dataworks.py loadData covid_data.csv
+   python3 datawork.py loadData covid_data.csv
 ```
 5. However, if you open the [covid_data.csv](covid_data.csv), it contains a lot of information. Specifically, the columns inclde a lot of information we will probably not need for exploring vaccine popularity. So, we can populate a new table called vaccine_data. The loaddata(datawork.pyL#83) function also inserts only the necessary information for our analysis into this smaller and more efficient data table.
 
@@ -100,7 +100,7 @@ Thankfully, there is a program that will give us the total percentage share of t
    
    
 ```
-   python3 dataworks.py getCountryVaccinePercentages
+   python3 datawork.py getCountryVaccinePercentages
 ```
 
 ## Connecting Our Analysis to the Web
