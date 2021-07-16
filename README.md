@@ -206,6 +206,14 @@ https://europecovidvaccine.azurewebsites.net/
 https://europecovidvaccine.azurewebsites.net/getpercentages
 https://europecovidvaccine.azurewebsites.net/mostpopular
 https://europecovidvaccine.azurewebsites.net/leastpopular
+
+## Visualize Data:
+
+You can make API calls to Jupyter Notebooks and visualize your data - here's an example. A sample Jupyter Notebook is provided.
+
+![image](https://user-images.githubusercontent.com/25991359/125873103-32d799de-edb4-473b-b950-27a6757262ba.png)
+
+ 
 ## Troubleshooting:
 
 If you are are having trouble with your website, please navigate to the log stream in the Azure Portal for important debugging information:
