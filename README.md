@@ -83,6 +83,13 @@ Copy this output string and set it aside.
 ```
    python3 datawork.py loadData covid_data.csv
 ```
+
+You can verify that everything worked by retrieving it:
+
+``` 
+python3 datawork.py getAllData
+```
+
 5. However, if you open the [covid_data.csv](covid_data.csv), it contains a lot of information. Specifically, the columns inclde a lot of information we will probably not need for exploring vaccine popularity. So, we can populate a new table called vaccine_data. The loaddata(datawork.pyL#83) function also inserts only the necessary information for our analysis into this smaller and more efficient data table.
 
 6. Let's do something more interesting with this new dataset. The function [getCountryVaccineCounts](datawork.py#119) obtains the total count of each vaccine type that is administered.
