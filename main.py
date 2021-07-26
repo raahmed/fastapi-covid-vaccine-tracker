@@ -1,8 +1,7 @@
 from typing import Dict
-from models import CountryVaccineSummary
 from fastapi import FastAPI
+from models import CountryVaccineSummary
 from datawork import getCountryVaccinePercentages
-
 
 app = FastAPI()
 
@@ -24,7 +23,7 @@ async def most_popular() -> Dict[str, str]:
                 top_vaccine_percentage = vaccine_percentage
                 top_vaccine = vaccine
         top_vaccine_by_country[country] = top_vaccine
-    return top_vaccine_by_country   
+    return top_vaccine_by_country
 
 @app.get("/leastpopular")
 async def least_popular() -> Dict[str, str]:

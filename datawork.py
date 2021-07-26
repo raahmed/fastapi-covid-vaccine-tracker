@@ -1,79 +1,91 @@
-import psycopg2
 import os
+import psycopg2
 
 from models import CountryVaccineSummary, CountryVaccineData
 
 
-VACCINE_TYPE = {"COM": "Pfizer/BioNTech", "MOD": "Moderna", "CN": "SinoPharm", "SIN": "Coronavac – Sinovac", "JANSS": "J&J Janssen", "SPU": "Sputnik V", "AZ": "AstraZeneca", "UNK": "Unknown" }
+VACCINE_TYPE = { "COM": "Pfizer/BioNTech", \
+    "MOD": "Moderna", \
+    "CN": "SinoPharm",\
+    "SIN": "Coronavac – Sinovac", \
+    "JANSS": "J&J Janssen", \
+    "SPU": "Sputnik V",\
+    "AZ": "AstraZeneca", \
+    "UNK": "Unknown" }
+
 COUNTRY_CODES = {
-    "BE": "Belgium", "BG": "Bulgaria", 
-    "CZ": "Czechia", 
-    "FR": "France", 
-    "DK": "Denmark", "DE": "Germany",
-    "EE": "Estonia",
-    "IE": "Ireland",
-    "EL": "Greece",
-    "ES": "Spain",
-    "HR": "Croatia",
-    "IT": "Italy",
-    "CY": "Cypress",
-    "LV": "Latvia",
-    "LT": "Lithuania",
-    "LU": "Luxembourg",
-    "HU": "Hungary",
-    "MT": "Malta",
-    "NL": "Netherlands",
-    "AT": "Austria",
-    "PL": "Poland", "PT": "Portugal",
-    "RO": "Romania",
-    "SI": "Slovenia", "SK":"Slovakia",
-    "FI": "Finland",
-    "SE": "Sweden",
-    "IS": "Iceland",
-    "LI": "Leichtenstein",
-    "CH": "Switzerland",
-    "NO": "Norway",
+    "BE": "Belgium",\
+    "BG": "Bulgaria",\
+    "CZ": "Czechia",\
+    "FR": "France",\
+    "DK": "Denmark",\
+    "DE": "Germany",\
+    "EE": "Estonia",\
+    "IE": "Ireland",\
+    "EL": "Greece",\
+    "ES": "Spain",\
+    "HR": "Croatia",\
+    "IT": "Italy",\
+    "CY": "Cypress",\
+    "LV": "Latvia",\
+    "LT": "Lithuania",\
+    "LU": "Luxembourg",\
+    "HU": "Hungary",\
+    "MT": "Malta",\
+    "NL": "Netherlands",\
+    "AT": "Austria",\
+    "PL": "Poland",\
+    "PT": "Portugal",\
+    "RO": "Romania",\
+    "SI": "Slovenia",\
+    "SK":"Slovakia",\
+    "FI": "Finland",\
+    "SE": "Sweden",\
+    "IS": "Iceland",\
+    "LI": "Leichtenstein",\
+    "CH": "Switzerland",\
+    "NO": "Norway",\
     "UK": "United Kingdom"
     }
 
-def writeConfig(conn_string):
+def write_config(conn_string):
     with open(".conninfo","w") as source:
         source.write(conn_string)
         return "Successfully wrote config file"
 
 
 def connect():
-    connString=os.getenv("CONNECTION_STRING")
+    connection_string=os.getenv("CONNECTION_STRING")
     try:
-        conn=psycopg2.connect(connString)
+        conn=psycopg2.connect(connection_string)
         return conn
     except:
-        print("Database connection error - is your connectionString set properly in Configuration Settings?")
+        print("Database connection error: \
+            Is your connection string set properly in Configuration Settings?")
         return None
 
-'''
-The headers for the CSV are as follows. 
-More information is present here: https://www.ecdc.europa.eu/sites/default/files/documents/Variable_Dictionary_VaccineTracker-03-2021.pdf
-YearWeekISO,FirstDose,FirstDoseRefused, SecondDose,UnknownDose,NumberDosesReceived,Region,Population,ReportingCountry,TargetGroup,Vaccine,Denominator
-'''
-
-def loadData(filename="covid_data.csv"):
+def load_data(filename="covid_data.csv"):
     conn=connect()
     cursor=conn.cursor()
     cursor.execute('CREATE EXTENSION IF NOT EXISTS postgis')
     cursor.execute('DROP TABLE IF EXISTS raw_data')
     cursor.execute('DROP TABLE IF EXISTS vaccine_data')
-    cursor.execute('CREATE TABLE raw_data(YearWeekISO text,FirstDose bigint, FirstDoseRefused bigint, SecondDose bigint, UnknownDose bigint, NumberDosesReceived bigint, Region text,Population text, ReportingCountry text, TargetGroup text, Vaccine text, Denominator text);')
-    cursor.execute('CREATE TABLE vaccine_data(NumberDosesReceived bigint, ReportingCountry text, Vaccine text);')
+    cursor.execute('CREATE TABLE raw_data(YearWeekISO text,FirstDose bigint, \
+        FirstDoseRefused bigint, SecondDose bigint, UnknownDose bigint, \
+        NumberDosesReceived bigint, Region text,Population text, \
+        ReportingCountry text, TargetGroup text, Vaccine text, Denominator text);')
+    cursor.execute('CREATE TABLE vaccine_data(NumberDosesReceived bigint,\
+        ReportingCountry text, Vaccine text);')
 
     conn.commit()
     with open(filename,'r') as incoming:
         cursor.copy_expert('COPY raw_data FROM stdin CSV',incoming)
-        cursor.execute('INSERT INTO vaccine_data SELECT SUM(NumberDosesReceived),ReportingCountry,Vaccine FROM raw_data GROUP BY reportingcountry, vaccine')
+        cursor.execute('INSERT INTO vaccine_data SELECT SUM(NumberDosesReceived),\
+            ReportingCountry,Vaccine FROM raw_data GROUP BY reportingcountry, vaccine')
         conn.commit()
         return "Data loaded successfully"
 
-def getAllData():
+def get_all_data():
     ret=dict()
     conn=connect()
     cursor=conn.cursor()
@@ -82,8 +94,8 @@ def getAllData():
         print(entry)
     return None
 
-def getCountryVaccinePercentages() -> CountryVaccineSummary:
-    vaccine_dose_counts: CountryVaccineSummary = getCountryVaccineCounts()
+def get_country_vaccine_percentages() -> CountryVaccineSummary:
+    vaccine_dose_counts: CountryVaccineSummary = get_country_vaccine_counts()
     for country in vaccine_dose_counts.country_names():
         total_doses = vaccine_dose_counts.country_data[country].total_doses
         if total_doses == 0:
@@ -94,7 +106,7 @@ def getCountryVaccinePercentages() -> CountryVaccineSummary:
             vaccine_dose_counts.country_data[country].vaccine_stats[vaccine_type] = percentage
     return vaccine_dose_counts
 
-def getCountryVaccineCounts() -> CountryVaccineSummary:
+def get_country_vaccine_counts() -> CountryVaccineSummary:
     summary_information: CountryVaccineSummary = CountryVaccineSummary()
     conn=connect()
     cursor=conn.cursor()
@@ -102,11 +114,13 @@ def getCountryVaccineCounts() -> CountryVaccineSummary:
     conn.commit()
     for entry in cursor.fetchall():
         doses, country, vaccine_type=entry
-        if country in COUNTRY_CODES:
-            country = COUNTRY_CODES[country]
-        if vaccine_type in VACCINE_TYPE:
-            vaccine_type = VACCINE_TYPE[vaccine_type]
-        if doses == None:
+        COUNTRY_CODES.get(country, country)
+        VACCINE_TYPE.get(vaccine_type, vaccine_type)
+        # if country in COUNTRY_CODES:
+        #     country = COUNTRY_CODES[country]
+        # if vaccine_type in VACCINE_TYPE:
+        #     vaccine_type = VACCINE_TYPE[vaccine_type]
+        if doses is None:
             doses = 0
         if country not in summary_information.country_data:
             summary_information.country_data[country] = CountryVaccineData(total_doses=0)
@@ -126,4 +140,4 @@ def getCountryVaccineCounts() -> CountryVaccineSummary:
 
 if __name__ == '__main__':
     import fire
-    fire.Fire({"writeConfig":writeConfig,"loadData":loadData,"getAllData": getAllData, "getCountryVaccineCounts":getCountryVaccineCounts, "getCountryVaccinePercentages": getCountryVaccinePercentages})
+    fire.Fire({"writeConfig":write_config,"loadData":load_data,"getAllData": get_all_data, "getCountryVaccineCounts":get_country_vaccine_counts, "getCountryVaccinePercentages": get_country_vaccine_percentages})
