@@ -65,7 +65,7 @@ Insert the information from the JSON into the following string:
    
 Then execute the line below - no need to substitute the values in the line below - it will be done automatically:
 ```
-   export CONNECTION_STRING "host=${SERVER_NAME} port=5432 dbname=postgres user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
+   export CONNECTION_STRING "host=${SERVER_NAME} port=5432 dbname={DB_NAME} user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
 ```
 
 3. Once that is done, execute the following line:
@@ -83,6 +83,13 @@ Copy this output string and set it aside.
 ```
    python3 datawork.py loadData covid_data.csv
 ```
+
+You can verify that everything worked by retrieving it:
+
+``` 
+python3 datawork.py getAllData
+```
+
 5. However, if you open the [covid_data.csv](covid_data.csv), it contains a lot of information. Specifically, the columns inclde a lot of information we will probably not need for exploring vaccine popularity. So, we can populate a new table called vaccine_data. The loaddata(datawork.pyL#83) function also inserts only the necessary information for our analysis into this smaller and more efficient data table.
 
 6. Let's do something more interesting with this new dataset. The function [getCountryVaccineCounts](datawork.py#119) obtains the total count of each vaccine type that is administered.
@@ -206,6 +213,14 @@ https://europecovidvaccine.azurewebsites.net/
 https://europecovidvaccine.azurewebsites.net/getpercentages
 https://europecovidvaccine.azurewebsites.net/mostpopular
 https://europecovidvaccine.azurewebsites.net/leastpopular
+
+## Visualize Data:
+
+You can make API calls to Jupyter Notebooks and visualize your data - here's an example. A sample Jupyter Notebook is provided.
+
+![image](https://user-images.githubusercontent.com/25991359/125873103-32d799de-edb4-473b-b950-27a6757262ba.png)
+
+ 
 ## Troubleshooting:
 
 If you are are having trouble with your website, please navigate to the log stream in the Azure Portal for important debugging information:
