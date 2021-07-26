@@ -116,10 +116,6 @@ def get_country_vaccine_counts() -> CountryVaccineSummary:
         doses, country, vaccine_type=entry
         COUNTRY_CODES.get(country, country)
         VACCINE_TYPE.get(vaccine_type, vaccine_type)
-        # if country in COUNTRY_CODES:
-        #     country = COUNTRY_CODES[country]
-        # if vaccine_type in VACCINE_TYPE:
-        #     vaccine_type = VACCINE_TYPE[vaccine_type]
         if doses is None:
             doses = 0
         if country not in summary_information.country_data:
@@ -140,4 +136,8 @@ def get_country_vaccine_counts() -> CountryVaccineSummary:
 
 if __name__ == '__main__':
     import fire
-    fire.Fire({"writeConfig":write_config,"loadData":load_data,"getAllData": get_all_data, "getCountryVaccineCounts":get_country_vaccine_counts, "getCountryVaccinePercentages": get_country_vaccine_percentages})
+    fire.Fire({"writeConfig":write_config,\
+    "loadData":load_data,\
+    "getAllData": get_all_data,\
+    "getCountryVaccineCounts":get_country_vaccine_counts,\
+    "getCountryVaccinePercentages": get_country_vaccine_percentages})
