@@ -65,7 +65,7 @@ Insert the information from the JSON into the following string:
    
 Then execute the line below - no need to substitute the values in the line below - it will be done automatically:
 ```
-   export CONNECTION_STRING="host=${SERVER_NAME} port=5432 dbname={DB_NAME} user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
+   export CONNECTION_STRING="host=${SERVER_NAME} port=5432 dbname=${DB_NAME} user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
 ```
 
 3. Once that is done, execute the following line:
