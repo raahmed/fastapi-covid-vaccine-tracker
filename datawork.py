@@ -114,8 +114,8 @@ def get_country_vaccine_counts() -> CountryVaccineSummary:
     conn.commit()
     for entry in cursor.fetchall():
         doses, country, vaccine_type=entry
-        COUNTRY_CODES.get(country, country)
-        VACCINE_TYPE.get(vaccine_type, vaccine_type)
+        country = COUNTRY_CODES.get(country, country)
+        vaccine_type =  VACCINE_TYPE.get(vaccine_type, vaccine_type)
         if doses is None:
             doses = 0
         if country not in summary_information.country_data:
