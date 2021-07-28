@@ -235,7 +235,7 @@ az group delete --name eurocovidvaccine --no-wait
 ```
 
 
-## Want to Learn More about PostgreSQL Flexible Server on Azure
+## Want to Learn More about Azure Database for PostgreSQL Flexible Server
 
 If you want to dig deeper and understand what Azure Database for PostgreSQL Flexible Server has to offer, the Flexible Server [documentation](https://docs.microsoft.com/azure/postgresql/flexible-server/) is a great place to start.
 
