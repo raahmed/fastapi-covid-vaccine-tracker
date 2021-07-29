@@ -2,4 +2,4 @@ psycopg2
 fire
 uvicorn
 fastapi
-easycharts
+json

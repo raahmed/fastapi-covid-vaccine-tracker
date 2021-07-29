@@ -1,6 +1,6 @@
 import os
 import psycopg2
-
+import json
 from models import CountryVaccineSummary, CountryVaccineData
 
 
@@ -68,20 +68,18 @@ def load_data(filename="covid_data.csv"):
     conn=connect()
     cursor=conn.cursor()
     cursor.execute('CREATE EXTENSION IF NOT EXISTS postgis')
-    cursor.execute('DROP TABLE IF EXISTS raw_data')
-    cursor.execute('DROP TABLE IF EXISTS vaccine_data')
-    cursor.execute('CREATE TABLE raw_data(YearWeekISO text,FirstDose bigint, \
-        FirstDoseRefused bigint, SecondDose bigint, UnknownDose bigint, \
-        NumberDosesReceived bigint, Region text,Population text, \
-        ReportingCountry text, TargetGroup text, Vaccine text, Denominator text);')
+    cursor.execute('DROP TABLE IF EXISTS vaccine_data')    
     cursor.execute('CREATE TABLE vaccine_data(NumberDosesReceived bigint,\
         ReportingCountry text, Vaccine text);')
 
     conn.commit()
     with open(filename,'r') as incoming:
         cursor.copy_expert('COPY raw_data FROM stdin CSV',incoming)
+        
+        #Add data to database
         cursor.execute('INSERT INTO vaccine_data SELECT SUM(NumberDosesReceived),\
             ReportingCountry,Vaccine FROM raw_data GROUP BY reportingcountry, vaccine')
+
         conn.commit()
         return "Data loaded successfully"
 
@@ -89,7 +87,10 @@ def get_all_data():
     ret=dict()
     conn=connect()
     cursor=conn.cursor()
+    
+    #Retrieves all the data
     cursor.execute('SELECT * FROM vaccine_data')
+
     for entry in cursor.fetchall():
         print(entry)
     return None
@@ -134,10 +135,18 @@ def get_country_vaccine_counts() -> CountryVaccineSummary:
     return summary_information
 
 
+def print_get_country_vaccine_percentages():
+    return get_country_vaccine_percentages().json()
+
+
+def print_get_country_vaccine_counts():
+    return get_country_vaccine_counts().json()
+
+
 if __name__ == '__main__':
     import fire
     fire.Fire({"writeConfig":write_config,\
     "loadData":load_data,\
     "getAllData": get_all_data,\
-    "getCountryVaccineCounts":get_country_vaccine_counts,\
-    "getCountryVaccinePercentages": get_country_vaccine_percentages})
+    "getCountryVaccineCounts": print_get_country_vaccine_counts,\
+    "getCountryVaccinePercentages": print_get_country_vaccine_percentages})
