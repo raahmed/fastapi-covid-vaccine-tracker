@@ -133,11 +133,16 @@ def get_country_vaccine_counts() -> CountryVaccineSummary:
                 print(doses, country, vaccine_type)
     return summary_information
 
+def print_get_country_vaccine_counts():
+    return get_country_vaccine_counts().json()
+
+def print_get_country_vaccine_percentages():
+    return get_country_vaccine_percentages().json()
 
 if __name__ == '__main__':
     import fire
     fire.Fire({"writeConfig":write_config,\
     "loadData":load_data,\
     "getAllData": get_all_data,\
-    "getCountryVaccineCounts":get_country_vaccine_counts,\
-    "getCountryVaccinePercentages": get_country_vaccine_percentages})
+    "getCountryVaccineCounts":print_get_country_vaccine_counts,\
+    "getCountryVaccinePercentages": print_get_country_vaccine_percentages})

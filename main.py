@@ -1,17 +1,42 @@
 from typing import Dict
 from fastapi import FastAPI
+import json
+from starlette.responses import JSONResponse
 from models import CountryVaccineSummary
 from datawork import get_country_vaccine_percentages
+import json
+import typing
+
+from starlette.responses import Response
+
+class PrettyJSONResponse(Response):
+    media_type = "application/json"
+
+    def render(self, content: typing.Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=4,
+            separators=(", ", ": "),
+            sort_keys=True,
+        ).encode("utf-8")
 
 app = FastAPI()
 
-@app.get("/data", response_model=CountryVaccineSummary)
+@app.get("/", response_class=PrettyJSONResponse)
 async def root():
     data = get_country_vaccine_percentages()
     return data
 
-@app.get("/mostpopular")
-async def most_popular() -> Dict[str, str]:
+
+@app.get("/data", response_class=PrettyJSONResponse)
+async def root():
+    data = get_country_vaccine_percentages()
+    return data
+
+@app.get("/mostcommon", response_class=PrettyJSONResponse)
+async def most_common() -> Dict[str, str]:
     data = get_country_vaccine_percentages()
     top_vaccine_by_country: Dict[str, str] = dict()
     for country in data.country_names():
@@ -25,8 +50,8 @@ async def most_popular() -> Dict[str, str]:
         top_vaccine_by_country[country] = top_vaccine
     return top_vaccine_by_country
 
-@app.get("/leastpopular")
-async def least_popular() -> Dict[str, str]:
+@app.get("/leastcommon", response_class=PrettyJSONResponse)
+async def least_common() -> Dict[str, str]:
     data = get_country_vaccine_percentages()
     top_vaccine_by_country: Dict[str, str] = dict()
     for country in data.country_names():
