@@ -1,11 +1,11 @@
-# Exploring Covid Vaccine Type Popularity with Python using FastAPI, Fire, Azure Database for PostgreSQL-Flexible Server(Preview) and Azure Web Apps
+# Exploring Covid Vaccine Type Popularity with Python using FastAPI, Fire, Azure Database for PostgreSQL - Flexible Server (Preview) and Azure Web Apps
 
-In this code, I will explore how FastAPI, Fire and Azure can be combined to gather meaningful insights from COVID vaccination data. We will use Fire to load publicly available data into Azure **Azure Database for PostgreSQL**-**Flexible Server** which is currently in public preview. We will then use FastAPI to query data, perform meaningful transformation on them and build APIs to share these insights with the world. These APIs will be hosted on Azure WebApps.
+In this code, I will explore how FastAPI, Fire and Azure can be combined to gather meaningful insights from COVID vaccination data. We will use Fire to load publicly available data into **Azure Database for PostgreSQL -Flexible Server** which is currently in public preview. We will then use FastAPI to query data, perform meaningful transformation on them and build APIs to share these insights with the world. These APIs will be hosted on Azure Web Apps.
 
 
 ## Prerequisites
 - Azure Subscription (e.g. [Free](https://aka.ms/azure-free-account) or [Student](https://aka.ms/azure-student-account))
-- Latest [pip](https://pip.pypa.io/en/stable/installing/) package installer
+- Latest [pip](https://pip.pypa.io/en/stable/installion/) package installer
 - Python 3.6+
 
 ## Install the Python libraries
@@ -29,7 +29,7 @@ az group create --location westus --name eurocovidvaccine
 az config param-persist on
 ```
 
-After you have finished setting up Azure, it is time to set up your Azure Database for Flexible Server. To do this, enter the following command. Note that the firewall settings are set to public access for simplicity of demonstration - you can limit these in the future by seeing the documentation. Give the command some time to execute.
+After you have finished setting up Azure, it is time to set up your Azure Database for PostgreSQL. To do this, enter the following command. Note that the firewall settings are set to public access for simplicity of demonstration - you can limit these in the future by seeing the documentation. Give the command some time to execute.
 
 ``` 
 az postgres flexible-server create --public-access all
@@ -47,32 +47,32 @@ When the command finishes executing, copy the JSON output of the output - paying
 ## How to run the Python examples
 
 1. First, we need to figure out what data we want to put into our database. For this demo, I download data from the ECDC website and added my sample CSV to this repository. You can obtain this data by cloning this repository:
-   ```
-   git clone https://github.com/raahmed/fastapi-covid-vaccine-tracker.git
-   cd fastapi-covid-vaccine-tracker
-   ```
+```
+git clone https://github.com/raahmed/fastapi-covid-vaccine-tracker.git
+cd fastapi-covid-vaccine-tracker
+```
 
 2. Next, we will use the contents of the JSON you saved when provisioning the database above in the "Get database connection information" section.
 
 ![image](https://user-images.githubusercontent.com/25991359/125120292-1d42a800-e0a7-11eb-8199-b14d625a3a1b.png)
 Insert the information from the JSON into the following string:
-   
-  ```
-   export SERVER_NAME='server176472475.postgres.database.azure.com'
-   export ADMIN_USERNAME='myusername'
-   export ADMIN_PASSWORD='mypassword'
-   export DB_NAME="flexibleserverdb"
+
+```
+export SERVER_NAME='server176472475.postgres.database.azure.com'
+export ADMIN_USERNAME='myusername'
+export ADMIN_PASSWORD='mypassword'
+export DB_NAME="flexibleserverdb"
  ```
    
 Then execute the line below - no need to substitute the values in the line below - it will be done automatically:
 ```
-   export CONNECTION_STRING="host=${SERVER_NAME} port=5432 dbname=${DB_NAME} user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
+export CONNECTION_STRING="host=${SERVER_NAME} port=5432 dbname=${DB_NAME} user=${ADMIN_USERNAME} password=${ADMIN_PASSWORD} sslmode=require"
 ```
 
 3. Once that is done, execute the following line:
 
 ```
-   echo $CONNECTION_STRING
+echo $CONNECTION_STRING
 ```
 
 You should see an output string with the correctly formatted information.
@@ -82,7 +82,7 @@ Copy this output string and set it aside.
 4. Next, let's create a table and load some data from a local CSV file, [covid_data.csv](covid_data.csv). The [loadData](datawork.py#L27) function of the datawork.py program will automatically connect to the database (using our connectionString), create our tables if they don't exist, and then use a COPY command to load our data into the `raw_data` table from `data.csv`. All we need to do is invoke that function with the name of the data file. 
 
 ```
-   python3 datawork.py loadData covid_data.csv
+python3 datawork.py loadData covid_data.csv
 ```
 
 You can verify that everything worked by retrieving it:
@@ -97,7 +97,7 @@ python3 datawork.py getAllData
 
 We can execute 
 ```
-   python3 datawork.py getCountryVaccineCounts
+python3 datawork.py getCountryVaccineCounts
 ```
 
 and we will see some numerical analysis.
@@ -108,7 +108,7 @@ Thankfully, there is a program that will give us the total percentage share of t
    
    
 ```
-   python3 datawork.py getCountryVaccinePercentages
+python3 datawork.py getCountryVaccinePercentages
 ```
 
 ## Connecting Our Analysis to the Web
@@ -128,17 +128,15 @@ All of these functions are shown in [main.py](main.py)!
 However, in order to execute them and see their output locally, you need to run the server. To do so, execute the following:
 
 ```
-   uvicorn main:app --reload
+uvicorn main:app --reload
 ```
 
 Then navigate to any of the following locally to see some interesting data trends:
 
-localhost:8000/
-localhost:8000/getpercentages
-localhost:8000/mostpopular
-localhost:8000/leastpopular
-
-
+<http://localhost:8000/>  
+<http://localhost:8000/getpercentages>  
+<http://localhost:8000/mostpopular>  
+<http://localhost:8000/leastpopular>  
 
 ### Showing your code to the World:
 
@@ -146,7 +144,7 @@ localhost:8000/leastpopular
 You might be interested in sharing your vaccine analysis with the world! To do this, you need to deploy your FastAPI and dataworks code to the internet. To do this, execute the following in your Terminal:
 
 ```
-   az webapp up --name europecovidvaccine
+az webapp up --name europecovidvaccine
 ```
 
 Please note - the value of the name flag needs to be unique across all of Azure! ProTip: try to add some random numbers to your preferred name.
@@ -164,7 +162,7 @@ Next, pick your website name from the list (or search for it):
 
 ![image](https://user-images.githubusercontent.com/25991359/125123401-76acd600-e0ab-11eb-852a-eda07e34ff59.png)
 
-Next, click "Settings" under "Configuration". ProTip: Use "Command + F" to search for "Configuration" if you are having trouble navigating the UI.
+Next, click "Settings" under "Configuration". ProTip: Use "Control/Command + F" to search for "Configuration" if you are having trouble navigating the UI.
 
 ![image](https://user-images.githubusercontent.com/25991359/125123580-b07ddc80-e0ab-11eb-92e5-6b6f0a8563c5.png)
 
@@ -172,7 +170,7 @@ Next, click "Add new Setting"
 
 ![image](https://user-images.githubusercontent.com/25991359/125123663-cab7ba80-e0ab-11eb-98e6-d507e9f02741.png)
 
-Next, used the copied output of your previous ``` echo $CONNECTION_STRING ``` command from the previous step and paste it:
+Next, used the copied output of your previous `echo $CONNECTION_STRING` command from the previous step and paste it:
 
 ![image](https://user-images.githubusercontent.com/25991359/125123910-2aae6100-e0ac-11eb-8638-27dbc8f3b2a3.png)
 
@@ -197,7 +195,7 @@ Finally, navigate to "General Settings" inside of the Configuration view:
 In the "Startup Command" section, copy and paste the following command:
 
 ```
-   gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app
+gunicorn -w 1 -k uvicorn.workers.UvicornWorker main:app
 ```
 
 Then click "Save" and then click "OK" when you are warned about application restart.
@@ -210,10 +208,10 @@ Your web applicaiton will now start up with the right command!
 
 You can now go to your Azure website and see the API endpoints!
 
-https://europecovidvaccine.azurewebsites.net/
-https://europecovidvaccine.azurewebsites.net/getpercentages
-https://europecovidvaccine.azurewebsites.net/mostpopular
-https://europecovidvaccine.azurewebsites.net/leastpopular
+<https://europecovidvaccine.azurewebsites.net/>  
+<https://europecovidvaccine.azurewebsites.net/getpercentages>  
+<https://europecovidvaccine.azurewebsites.net/mostpopular>  
+<https://europecovidvaccine.azurewebsites.net/leastpopular>  
 
 ## Visualize Data:
 
@@ -234,17 +232,17 @@ If you are are having trouble with your website, please navigate to the log stre
 If you have created an Azure resources for the purposes of this lab and you *do not* want to keep and continue to be billed for it, you can delete via the terminal:
 
 ```
-   az group delete --name eurocovidvaccine --no-wait
+az group delete --name eurocovidvaccine --no-wait
 ```
 
 
-## Want to Learn More about PostgreSQL Flexible Server on Azure
+## Want to Learn More about Azure Database for PostgreSQL Flexible Server
 
-If you want to dig deeper and undestand what all PostgreSQL Flexible Server on Azure has to offer , the Flexible Server [documents](https://docs.microsoft.com/en-us/azure/postgresql/flexible-server/) are a great place to start.
+If you want to dig deeper and understand what Azure Database for PostgreSQL Flexible Server has to offer, the Flexible Server [documentation](https://docs.microsoft.com/azure/postgresql/flexible-server/) is a great place to start.
 
-## Want to Learn More about WebApps on Azure
+## Want to Learn More about Azure Web Apps 
 
-If you want to dig deeper and undestand what all PostgreSQL Flexible Server on Azure has to offer , the Flexible Server [documents](https://docs.microsoft.com/en-us/azure/app-service/) are a great place to start.
+If you want to dig deeper and understand what Azure Web Apps have to offer, the [documentation](https://docs.microsoft.com/azure/app-service/) is a great place to start.
 
 ## Reference:
 - Code inspired by:
